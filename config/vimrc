@@ -1,0 +1,32 @@
+" General settings
+set nocompatible
+set encoding=utf-8
+set tabstop=2
+set shiftwidth=2
+set expandtab
+set background=dark
+set list listchars=tab:\ \ ,trail:-
+set autoindent
+set smartindent
+set nohlsearch
+
+" Drupal files settings
+if has("autocmd")
+  augroup module
+    autocmd BufRead,BufNewFile *.module set filetype=php
+    autocmd BufRead,BufNewFile *.install set filetype=php
+    autocmd BufRead,BufNewFile *.test set filetype=php
+    autocmd BufRead,BufNewFile *.inc set filetype=php
+    autocmd BufRead,BufNewFile *.profile set filetype=php
+    autocmd BufRead,BufNewFile *.view set filetype=php
+  augroup END
+endif
+syntax on
+
+" Render HTML links without underline
+let html_no_rendering=1
+
+" Spell check settings
+"setlocal spell spelllang=es
+set spellfile=~/.vim/dict.add
+
