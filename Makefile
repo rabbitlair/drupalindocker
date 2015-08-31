@@ -15,14 +15,17 @@ PROFILE=standard
 DBNAME=dbname
 DBUSER=dbuser
 DBPASS=dbpass
-MYSQL_ROOT_PASSWORD=root
+ROOTPASS=root
+
+# Bash snippet to check if MySQL server is up
+MYSQL_CHECK=mysql -uroot -p$(ROOTPASS) -hmysql -sN -e "SELECT 1"  2> /dev/null || echo "0"
 
 all: docker
 
 docker:
 	@docker pull mysql
 	@docker pull memcached
-	@docker run --name mysql -e MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD} \
+	@docker run --name mysql -e MYSQL_ROOT_PASSWORD=${ROOTPASS} \
     -e MYSQL_DATABASE=${DBNAME} -e MYSQL_USER=${DBUSER} -e MYSQL_PASSWORD=${DBPASS} -d mysql
 	@docker run --name memcached -d memcached
 	@docker build -t ${NAME} .
@@ -36,7 +39,7 @@ customize:
 	@cp config/vimrc /root/.vimrc
 	@git config --global alias.st status
 	@git config --global color.ui true
-	@sleep 10 # TODO Wait for MySQL to be up in a proper way
+	@while [ `$(MYSQL_CHECK)` != "1" ]; do sleep 1; done
 
 install:
 	@drush dl drupal-${VERSION} --yes --drupal-project-rename=docroot
