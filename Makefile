@@ -46,10 +46,10 @@ configure:
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
 
 install:
-	@$$HOME/.composer/vendor/bin/drush dl drupal-7.x --yes --drupal-project-rename=docroot
+	@$$HOME/.composer/vendor/bin/drush dl drupal-6.x --yes --drupal-project-rename=docroot
 	@mkdir -p docroot/sites/all/modules/contrib
 	@mkdir docroot/sites/default/files && chmod 0644 docroot/sites/default/files
-	@$$HOME/.composer/vendor/bin/drush si standard -y \
+	@$$HOME/.composer/vendor/bin/drush si default -y \
     --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --root=/var/www/drupal/docroot \
     --account-pass="${ADMINPASS}" --account-mail="${ADMINMAIL}" --site-name="${SITENAME}" \
     install_configure_form.update_status_module='array(FALSE,FALSE)'
