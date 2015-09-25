@@ -42,7 +42,6 @@ configure:
 	@echo 'export PATH="$$HOME/.composer/vendor/bin:$$PATH"' >> /root/.bashrc
 	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
-	@chown -R www-data:www-data /var/www/drupal/docroot/sites/default/files
 
 install:
 	@[ -d docroot ] || git clone -b 8.0.x http://git.drupal.org/project/drupal.git docroot
@@ -50,6 +49,7 @@ install:
     --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --account-mail="${ADMINMAIL}"\
     --account-pass="${ADMINPASS}" --site-name="${SITENAME}"
 	@$$HOME/.composer/vendor/bin/drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
+	@chown -R www-data:www-data /var/www/drupal/docroot/sites/default/files
 
 drupal: customize configure install
 	@service php5-fpm restart
@@ -62,7 +62,7 @@ drupal: customize configure install
 clean:
 	@-docker kill ${NAME} 2>&1 && docker rm ${NAME} 2>&1
 	@-docker kill mysql 2>&1  && docker rm mysql 2>&1
-	@sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot
+	@-sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot
 	@sudo sed -i '/127.0.0.1 ${URL}/d' /etc/hosts
 
 clean-all: clean
