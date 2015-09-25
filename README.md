@@ -1,8 +1,8 @@
 ## Drupal in Docker
 
-Simple set of scripts to launch a new Drupal local site on Docker containers. It deploys an Ubuntu 14.04 webserver node inside a Docker container, with Apache 2.4 and PHP FPM 5.5, with some PHP extensions already configured: memcached, opecache and igbinary.
+Simple set of scripts to launch a new Drupal local site on Docker containers. It deploys an Ubuntu 14.04 webserver node inside a Docker container, with Apache 2.4 and PHP FPM 5.5, with some PHP extensions already configured: memcached and opcache (this one is disabled by default).
 
-Drush is installed from PEAR channel, and Drupal 6 and 7 are supported (both are installed with Memcache support enabled). MySQL and Memcached official Docker images are used to run those services. WARNING: database is not persistent when you destroy the container, so save your work if you want to reuse it.
+Drush is installed using Composer, and Drupal 6, 7 and 8 are supported (6 and 7 are installed with Memcache support enabled). MySQL and Memcached official Docker images are used to run those services. WARNING: database is not persistent when you destroy the container, so save your work if you want to reuse it.
 
 ### Usage
 
@@ -11,10 +11,9 @@ First, edit Makefile, and set your preferred settings:
 - *NAME:* name of the Docker container
 - *URI:* domain to be used by the Drupal site
 - *PORT:* you localhost port which will be redirected to the container's tcp/80
+- *ADMINMAIL:* email account for Drupal's admin account
 - *ADMINPASS:* password for Drupal's admin account
 - *SITENAME:* site title for the website
-- *VERSION:* Choose between 6.x and 7.x
-- *PROFILE:* Name of the profile to be installed - default for 6.x, standard for 7.x
 - *DBNAME:* Database name where Drupal will be installed
 - *DBUSER:* Database user for the Drupal app
 - *DBPASS:* Database user's password

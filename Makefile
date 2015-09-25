@@ -6,10 +6,9 @@ URL=local.drupal.es
 PORT=8080
 
 # Drupal settings
+ADMINMAIL=admin@example.com
 ADMINPASS=password
 SITENAME=My Dev Site
-VERSION=7.x
-PROFILE=standard
 
 # Database settings
 DBNAME=dbname
@@ -41,26 +40,29 @@ customize:
 	@git config --global color.ui true
 	@while [ `$(MYSQL_CHECK)` != "1" ]; do sleep 1; done
 
+configure:
+	@echo 'export PATH="$$HOME/.composer/vendor/bin:$$PATH"' >> /root/.bashrc
+	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
+	@echo "ServerName docker" >> /etc/apache2/apache2.conf
+
 install:
-	@drush dl drupal-${VERSION} --yes --drupal-project-rename=docroot
+	@$$HOME/.composer/vendor/bin/drush dl drupal-7.x --yes --drupal-project-rename=docroot
 	@mkdir -p docroot/sites/all/modules/contrib
 	@mkdir docroot/sites/default/files && chmod 0644 docroot/sites/default/files
-	@drush si ${PROFILE} -y --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} \
-    --account-pass="${ADMINPASS}" --root=/var/www/drupal/docroot --site-name="${SITENAME}" \
+	@$$HOME/.composer/vendor/bin/drush si standard -y \
+    --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --root=/var/www/drupal/docroot \
+    --account-pass="${ADMINPASS}" --account-mail="${ADMINMAIL}" --site-name="${SITENAME}" \
     install_configure_form.update_status_module='array(FALSE,FALSE)'
 	@chown -R www-data:www-data docroot/sites/default/files
 
 memcache:
-	@drush dl memcache --destination=sites/all/modules/contrib --root=/var/www/drupal/docroot
-	@cat config/drupal/memcache-settings-${VERSION} >> docroot/sites/default/settings.php
-	@drush -y en memcache --root=/var/www/drupal/docroot --uri=${URL}
+	@$$HOME/.composer/vendor/bin/drush dl memcache --destination=sites/all/modules/contrib \
+    --root=/var/www/drupal/docroot
+	@cat config/drupal/memcache-settings >> docroot/sites/default/settings.php
+	@$$HOME/.composer/vendor/bin/drush -y en memcache --root=/var/www/drupal/docroot
 
-configure:
-	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
-	@echo "ServerName docker" >> /etc/apache2/apache2.conf
-	@drush uli --root=/var/www/drupal/docroot --uri=${URL}:${PORT}
-
-drupal: customize install memcache configure
+drupal: customize configure install memcache
+	@$$HOME/.composer/vendor/bin/drush uli --root=/var/www/drupal/docroot --uri=${URL}:${PORT}
 	@service php5-fpm restart
 	@service apache2 restart
 	@touch /var/log/apache2/error.log
@@ -69,9 +71,9 @@ drupal: customize install memcache configure
 	@tail -f /var/log/apache2/error.log
 
 clean:
-	@docker kill ${NAME} 2>&1 && docker rm ${NAME} 2>&1
-	@docker kill mysql 2>&1  && docker rm mysql 2>&1
-	@docker kill memcached 2>&1  && docker rm memcached 2>&1
+	@-docker kill ${NAME} 2>&1 && docker rm ${NAME} 2>&1
+	@-docker kill mysql 2>&1  && docker rm mysql 2>&1
+	@-docker kill memcached 2>&1  && docker rm memcached 2>&1
 	@sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot
 	@sudo sed -i '/127.0.0.1 ${URL}/d' /etc/hosts
 
