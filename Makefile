@@ -19,11 +19,17 @@ ROOTPASS=root
 # Bash snippet to check if MySQL server is up
 MYSQL_CHECK=mysql -uroot -p$(ROOTPASS) -hmysql -sN -e "SELECT 1"  2> /dev/null || echo "0"
 
+# Check docker images are ready to be used
+BASEIMAGE=$(shell docker images | grep ${NAME} | wc -l)
+MYSQLIMAGE=$(shell docker images | grep mysql | wc -l)
+MEMCACHEIMAGE=$(shell docker images | grep memcache | wc -l)
+
 all: docker
 
 docker:
-	@docker pull mysql
-	@docker pull memcached
+	@[ "$(MYSQLIMAGE)" -eq "1" ] || docker pull mysql
+	@[ "$(MEMCACHEIMAGE)" -eq "1" ] || docker pull memcache
+	@[ "$(BASEIMAGE)" -eq "1" ] || docker build -t ${NAME} .
 	@docker run --name mysql -e MYSQL_ROOT_PASSWORD=${ROOTPASS} \
     -e MYSQL_DATABASE=${DBNAME} -e MYSQL_USER=${DBUSER} -e MYSQL_PASSWORD=${DBPASS} -d mysql
 	@docker run --name memcached -d memcached
