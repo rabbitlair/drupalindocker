@@ -28,8 +28,10 @@ all: docker
 docker:
 	@[ "$(MYSQLIMAGE)" -eq "1" ] || docker pull mysql
 	@[ "$(BASEIMAGE)" -eq "1" ] || docker build -t ${NAME} .
-	@docker run --name mysql -e MYSQL_ROOT_PASSWORD=${ROOTPASS} \
-    -e MYSQL_DATABASE=${DBNAME} -e MYSQL_USER=${DBUSER} -e MYSQL_PASSWORD=${DBPASS} -d mysql
+	@[ -d "mysql-data" ] || mkdir mysql-data
+	@docker run --name mysql -v $(shell pwd)/mysql-data:/var/lib/mysql \
+    -e MYSQL_ROOT_PASSWORD=${ROOTPASS} -e MYSQL_DATABASE=${DBNAME} -e MYSQL_USER=${DBUSER} \
+    -e MYSQL_PASSWORD=${DBPASS} -d mysql
 	@docker run -d -p ${PORT}:80 -v $(shell pwd):/var/www/drupal \
     --link mysql:mysql --name=${NAME} ${NAME}
 	@echo "127.0.0.1 ${URL}" | sudo tee --append /etc/hosts > /dev/null
@@ -48,12 +50,16 @@ configure:
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
 
 install:
-	@[ -d docroot ] || git clone -b 8.0.x http://git.drupal.org/project/drupal.git docroot
-	@$$HOME/.composer/vendor/bin/drush si standard -y --root=/var/www/drupal/docroot \
+ifneq ($(wildcard ./docroot/.*),)
+	@chown -R www-data:www-data docroot/sites/default/files
+else
+	@drush dl drupal-8 --drupal-project-rename=docroot
+	@drush si standard -y --root=/var/www/drupal/docroot \
     --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --account-mail="${ADMINMAIL}"\
     --account-pass="${ADMINPASS}" --site-name="${SITENAME}"
-	@$$HOME/.composer/vendor/bin/drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
-	@chown -R www-data:www-data /var/www/drupal/docroot/sites/default/files
+	@chown -R www-data:www-data docroot/sites/default/files
+	@drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
+endif
 
 drupal: customize configure install
 	@service php5-fpm restart
@@ -64,11 +70,13 @@ drupal: customize configure install
 	@tail -f /var/log/apache2/error.log
 
 clean:
-	@-docker kill ${NAME} 2>&1 && docker rm ${NAME} 2>&1
-	@-docker kill mysql 2>&1  && docker rm mysql 2>&1
-	@-sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot
+	@-docker kill ${NAME} 2>&1
+	@-docker rm ${NAME} 2>&1
+	@-docker kill mysql 2>&1
+	@-docker rm mysql 2>&1
+	@-sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot mysql-data
 	@sudo sed -i '/127.0.0.1 ${URL}/d' /etc/hosts
 
 clean-all: clean
-	@sudo rm -rf docroot
+	@sudo rm -rf docroot mysql-data
 
