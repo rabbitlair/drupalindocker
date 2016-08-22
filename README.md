@@ -2,7 +2,7 @@
 
 Simple set of scripts to launch a new Drupal local site on Docker containers. It deploys an Ubuntu 14.04 webserver node inside a Docker container, with Apache 2.4 and PHP FPM 5.5, with some PHP extensions already configured: memcached and opcache (this one is disabled by default).
 
-Drush is installed using Composer, and Drupal 6, 7 and 8 are supported (6 and 7 are installed with Memcache support enabled). MySQL and Memcached official Docker images are used to run those services. WARNING: database is not persistent when you destroy the container, so save your work if you want to reuse it.
+Drush is installed using Composer, and Drupal 6, 7 and 8 are supported (6 and 7 are installed with Memcache support enabled). MySQL and Memcached official Docker images are used to run those services.
 
 ### Usage
 
