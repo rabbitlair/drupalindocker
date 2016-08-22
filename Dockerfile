@@ -24,10 +24,8 @@ COPY config/php/opcache.ini /etc/php5/mods-available/opcache.ini
 COPY config/php/memcached.ini /etc/php5/mods-available/memcached.ini
 COPY config/php/www.conf /etc/php5/fpm/pool.d/www.conf
 
-# Install Composer and Drush
-RUN curl -sS https://getcomposer.org/installer | php
-RUN mv composer.phar /usr/local/bin/composer
-RUN composer global require drush/drush:7.*
+# Install Drush
+RUN php -r "readfile('https://s3.amazonaws.com/files.drush.org/drush.phar');" > /usr/local/bin/drush && chmod +x /usr/local/bin/drush
 
 # Copy Apache2 settings
 COPY config/apache2/virtualhost.conf /etc/apache2/sites-available/drupal.conf
