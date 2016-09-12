@@ -69,7 +69,7 @@ drupal: customize configure install
 	@nohup tail -f /var/log/php_errors.log > /dev/stderr &
 	@tail -f /var/log/apache2/error.log
 
-clean:
+halt:
 	@-docker kill ${NAME} 2>&1
 	@-docker rm ${NAME} 2>&1
 	@-docker kill mysql 2>&1
@@ -77,6 +77,6 @@ clean:
 	@-sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot mysql-data
 	@sudo sed -i '/127.0.0.1 ${URL}/d' /etc/hosts
 
-clean-all: clean
+destroy: halt
 	@sudo rm -rf docroot mysql-data
 
