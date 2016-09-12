@@ -21,7 +21,7 @@ First, edit Makefile, and set your preferred settings:
 
 After that, save the changes, and execute `make` to have everything up and running. First execution will take longer, as it has to pull and build the Docker images.
 
-To kill and remove the containers, but not delete the Drupal code and database, execute `make clean`. If you want to clean containers and the Drupal code and database, execute `make clean-all`.
+To kill and remove the containers, but not delete the Drupal code and database, execute `make halt`. If you want to clean containers and the Drupal code and database, execute `make destroy`.
 
 ### Dependencies
 
