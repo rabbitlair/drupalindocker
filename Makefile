@@ -2,8 +2,8 @@
 
 # Container settings
 NAME=drupal
-URL=local.drupal.es
-PORT=8080
+URL=local.${NAME}.es
+PORT=8081
 
 # Drupal settings
 ADMINMAIL=admin@example.com
@@ -11,13 +11,13 @@ ADMINPASS=password
 SITENAME=My Dev Site
 
 # Database settings
-DBNAME=dbname
-DBUSER=dbuser
-DBPASS=dbpass
+DBNAME=${NAME}
+DBUSER=${NAME}
+DBPASS=${NAME}
 ROOTPASS=root
 
 # Bash snippet to check if MySQL server is up
-MYSQL_CHECK=mysql -uroot -p$(ROOTPASS) -hmysql -sN -e "SELECT 1"  2> /dev/null || echo "0"
+MYSQL_CHECK=mysql -uroot -p${ROOTPASS} -hmysql -sN -e "SELECT 1"  2> /dev/null || echo "0"
 
 # Check docker images are ready to be used
 BASEIMAGE=$(shell docker images | grep ${NAME} | wc -l)
@@ -29,11 +29,11 @@ docker:
 	@[ "$(MYSQLIMAGE)" -eq "1" ] || docker pull mysql
 	@[ "$(BASEIMAGE)" -eq "1" ] || docker build -t ${NAME} .
 	@[ -d "mysql-data" ] || mkdir mysql-data
-	@docker run --name mysql -v $(shell pwd)/mysql-data:/var/lib/mysql \
+	@docker run --name mysql-${NAME} -v $(shell pwd)/mysql-data:/var/lib/mysql \
     -e MYSQL_ROOT_PASSWORD=${ROOTPASS} -e MYSQL_DATABASE=${DBNAME} -e MYSQL_USER=${DBUSER} \
     -e MYSQL_PASSWORD=${DBPASS} -d mysql
 	@docker run -d -p ${PORT}:80 -v $(shell pwd):/var/www/drupal \
-    --link mysql:mysql --name=${NAME} ${NAME}
+    --link mysql-${NAME}:mysql --name=${NAME} ${NAME}
 	@echo "127.0.0.1 ${URL}" | sudo tee --append /etc/hosts > /dev/null
 	@docker logs -f ${NAME}
 
@@ -45,7 +45,6 @@ customize:
 	@while [ `$(MYSQL_CHECK)` != "1" ]; do sleep 1; done
 
 configure:
-	@echo 'export PATH="$$HOME/.composer/vendor/bin:$$PATH"' >> /root/.bashrc
 	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
 
@@ -58,11 +57,11 @@ else
     --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --account-mail="${ADMINMAIL}"\
     --account-pass="${ADMINPASS}" --site-name="${SITENAME}"
 	@chown -R www-data:www-data docroot/sites/default/files
-	@drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
 endif
+	@drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
 
 drupal: customize configure install
-	@service php5-fpm restart
+	@service php7.0-fpm start
 	@service apache2 restart
 	@touch /var/log/apache2/error.log
 	@touch /var/log/php_errors.log
@@ -72,8 +71,8 @@ drupal: customize configure install
 halt:
 	@-docker kill ${NAME} 2>&1
 	@-docker rm ${NAME} 2>&1
-	@-docker kill mysql 2>&1
-	@-docker rm mysql 2>&1
+	@-docker kill mysql-${NAME} 2>&1
+	@-docker rm mysql-${NAME} 2>&1
 	@-sudo chown -R $(shell id -u -n):$(shell id -g -n) docroot mysql-data
 	@sudo sed -i '/127.0.0.1 ${URL}/d' /etc/hosts
 
