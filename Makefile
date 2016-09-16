@@ -39,6 +39,7 @@ docker:
 
 customize:
 	@echo "export TERM=xterm" >> ~/.bashrc
+	@echo 'export XDEBUG_CONFIG="idekey=1"' >> ~/.bashrc
 	@cp config/vimrc /root/.vimrc
 	@git config --global alias.st status
 	@git config --global color.ui true
@@ -46,19 +47,19 @@ customize:
 
 configure:
 	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
+	@sed -i 's/URL/${URL}/g' /etc/drush/project.aliases.drushrc.php
+	@mv /etc/drush/project.aliases.drushrc.php /etc/drush/${NAME}.aliases.drushrc.php
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
 
 install:
-ifneq ($(wildcard ./docroot/.*),)
-	@chown -R www-data:www-data docroot/sites/default/files
-else
+ifeq ("$(wildcard ./docroot/.*)","")
 	@drush dl drupal-8 --drupal-project-rename=docroot
 	@drush si standard -y --root=/var/www/drupal/docroot \
     --db-url=mysql://${DBUSER}:${DBPASS}@mysql/${DBNAME} --account-mail="${ADMINMAIL}"\
     --account-pass="${ADMINPASS}" --site-name="${SITENAME}"
-	@chown -R www-data:www-data docroot/sites/default/files
 endif
-	@drush uli --uri=${URL}:${PORT} --root=/var/www/drupal/docroot
+	@chown -R www-data:www-data docroot/sites/default/files
+	@drush @${NAME}.local uli
 
 drupal: customize configure install
 	@service php7.0-fpm start

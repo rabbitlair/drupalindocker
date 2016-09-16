@@ -22,7 +22,7 @@ RUN apt-get -qq update && \
     php7.0 php7.0-cgi php7.0-cli php7.0-fpm php7.0-gd php7.0-json php7.0-mysql \
     php7.0-curl php7.0-readline php7.0-mbstring php7.0-zip php7.0-xml php-xdebug \
     apache2-mpm-worker libapache2-mod-fastcgi \
-    pkg-config make gcc autoconf git vim mysql-client curl \
+    pkg-config make gcc autoconf git vim mysql-client curl postfix \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy PHP setting files
@@ -33,7 +33,8 @@ COPY config/php/opcache.ini /etc/php/7.0/mods-available/opcache.ini
 COPY config/vim /root/.vim
 
 # Install Drush
-RUN php -r "readfile('https://s3.amazonaws.com/files.drush.org/drush.phar');" > /usr/local/bin/drush && chmod +x /usr/local/bin/drush
+RUN php -r "readfile('https://s3.amazonaws.com/files.drush.org/drush.phar');" > /usr/local/bin/drush && chmod +x /usr/local/bin/drush && mkdir /etc/drush
+COPY config/drupal/drush.local.php /etc/drush/project.aliases.drushrc.php
 
 # Copy Apache2 settings
 COPY config/apache2/virtualhost.conf /etc/apache2/sites-available/drupal.conf
