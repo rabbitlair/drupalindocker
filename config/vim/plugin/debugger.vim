@@ -160,13 +160,13 @@ if !exists('g:debuggerPort')
   let g:debuggerPort = 9000
 endif 
 if !exists('g:debuggerMaxChildren')
-  let g:debuggerMaxChildren = 32
+  let g:debuggerMaxChildren = 128
 endif
 if !exists('g:debuggerMaxData')
   let g:debuggerMaxData = 1024
 endif
 if !exists('g:debuggerMaxDepth')
-  let g:debuggerMaxDepth = 1
+  let g:debuggerMaxDepth = 10
 endif
 if !exists('g:debuggerMiniBufExpl')
   let g:debuggerMiniBufExpl = 0
