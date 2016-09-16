@@ -3,7 +3,7 @@
 # Container settings
 NAME=drupal
 URL=local.${NAME}.es
-PORT=8081
+PORT=8080
 
 # Drupal settings
 ADMINMAIL=admin@example.com
@@ -47,7 +47,7 @@ customize:
 
 configure:
 	@sed -i 's/SERVER_NAME/${URL}/g' /etc/apache2/sites-available/drupal.conf
-	@sed -i 's/URL/${URL}/g' /etc/drush/project.aliases.drushrc.php
+	@sed -i 's/URL/${URL}:${PORT}/g' /etc/drush/project.aliases.drushrc.php
 	@mv /etc/drush/project.aliases.drushrc.php /etc/drush/${NAME}.aliases.drushrc.php
 	@echo "ServerName docker" >> /etc/apache2/apache2.conf
 
