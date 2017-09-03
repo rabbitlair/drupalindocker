@@ -22,13 +22,13 @@ MYSQL_CHECK=mysql -uroot -p$(ROOTPASS) -hmysql -sN -e "SELECT 1"  2> /dev/null |
 # Check docker images are ready to be used
 BASEIMAGE=$(shell docker images | grep ${NAME} | wc -l)
 MYSQLIMAGE=$(shell docker images | grep mysql | wc -l)
-MEMCACHEIMAGE=$(shell docker images | grep memcache | wc -l)
+MEMCACHEIMAGE=$(shell docker images | grep memcached | wc -l)
 
 all: docker
 
 docker:
 	@[ "$(MYSQLIMAGE)" -eq "1" ] || docker pull mysql
-	@[ "$(MEMCACHEIMAGE)" -eq "1" ] || docker pull memcache
+	@[ "$(MEMCACHEIMAGE)" -eq "1" ] || docker pull memcached
 	@[ "$(BASEIMAGE)" -eq "1" ] || docker build -t ${NAME} .
 	@[ -d "mysql-data" ] || mkdir mysql-data
 	@docker run --name mysql -v $(shell pwd)/mysql-data:/var/lib/mysql \
@@ -76,6 +76,16 @@ drupal: customize configure install
 	@touch /var/log/php_errors.log
 	@nohup tail -f /var/log/php_errors.log > /dev/stderr &
 	@tail -f /var/log/apache2/error.log
+
+start:
+	@docker start mysql
+	@docker start memcached
+	@docker start ${NAME}
+
+stop:
+	@docker stop ${NAME}
+	@docker stop mysql
+	@docker stop memcached
 
 halt:
 	@-docker kill ${NAME} 2>&1
